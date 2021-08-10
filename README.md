@@ -1,12 +1,12 @@
 #### Malum_Consilium
-###Capstone
+### Capstone
 
 
-##Stock prediction model
+## Stock prediction model
 	•	Use historical pricing to predict and graph future stock price
 	•	Show real time indicator which will help the user determine wether to buy or sell the stock
 
-##Features/ Users stories:
+## Features/ Users stories:
 	1.  As a User I want to be able to look up stock chart by ticker
 	    -	User will be able to look up a stock by chart by ticker symbol(MVP1)
 	    - Also the user should be able to look up the stock by the company name the company’s name(optional)
@@ -26,11 +26,11 @@
   8. As a user I want to be able to change my viewing options
       -Add dark/light mode based off users system settings, but can be changed in account(optional)
 
-##Data Model:
+## Data Model:
 	•	Users
 	•	Stock
 
-##Schedule:
+## Schedule:
 09 AUG - Complete proposal set up repository
 10 - 11 AUG MVP 1
 12-13 AUG MVP 2
