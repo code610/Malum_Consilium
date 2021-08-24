@@ -1,0 +1,2 @@
+web: gunicorn stock_visualizer.wsgi
+release: python manage.py migrate
