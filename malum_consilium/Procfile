@@ -1,2 +1,2 @@
-web: gunicorn stock_visualizer.wsgi
+web: gunicorn malum_consilium.wsgi
 release: python manage.py migrate
