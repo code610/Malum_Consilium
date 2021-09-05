@@ -12,8 +12,12 @@
 <br>
 
 <label for="ticker-input">Enter Symbol:</label>
-<input type="text" id="ticker-input">
-<input type="button" value="submit" id="submit-btn">
+<input type="text"  id="ticker-input">
+<br>
+<input type="button" value="1 week" id="1-week">
+<input type="button" value="1 month" id="1-month">
+<input type="button" value="1 year" id="1-year">
+<input type="button" value="5 years" id="5-years">
 <br>
 
 <div id="graph-area" style="height:80%; width:80%;">
@@ -21,9 +25,6 @@
 </div>
 <br>
 
-<div>
-    Friendly reminder: if the graphing function stops working after several successful instances, don't worry! It is likely that you have reached the 5 requests/minute rate limit of the free Alpha Vantage API key. The graph should work again in the next minute or after you obtain a <a href="https://www.alphavantage.co/premium/" target="_blank">premium API key</a> with a higher rate limit.
-</div>
 
 <script>
 
@@ -38,7 +39,7 @@
               success: function (res, status) {
                 // AAPL's stock price and SMA data is now in the "res" object
                 var tickerDisplay = res['prices']['Meta Data']['2. Symbol'];
-                var graphTitle = tickerDisplay + ' (data for the trailing 500 trading days)'
+                var graphTitle = tickerDisplay + ' (data for past year)'
 
                 var priceSeries = res['prices']['Time Series (Daily)'];
                 var daily_adjusted_close = [];
@@ -64,10 +65,25 @@
                 };
                 sma_data_parse();
 
+                var macdSeries = res['macd']['Technical Analysis: MACD'];
+                var macd_data = [];
+
+                macd_data_parse = function(){
+                    for (let key in macdSeries){
+                        macd_data.push(Number(macdSeries[key]['MACD']));
+                    }
+                };
+                macd_data_parse();
+
+                
+
+                
+
 
                 // only keep the latest 500 data points (i.e., data for the latest 500 trading days) for the three lists below
                 daily_adjusted_close.reverse().slice(500);
                 sma_data.reverse().slice(500);
+                macd_data.reverse().slice(500);
                 dates.reverse().slice(500);
 
                 //instruct Chart.js to plot the graph, with "dates" as the x-axis labels and "daily_adjusted_close" and "sma_data" as the y-axis values
@@ -75,11 +91,11 @@
                 var myChart = new Chart(ctx, {
                 type: 'line',
                     data: {
-                        labels: dates.slice(-500),
+                        labels: dates.slice(-253),
                         datasets: [
                             {
                                 label: 'Daily Adjusted Close',
-                                data: daily_adjusted_close.slice(-500),
+                                data: daily_adjusted_close.slice(-253),
                                 backgroundColor: [
                                     'green',
                                 ],
@@ -90,7 +106,18 @@
                             },
                             {
                                 label: 'Simple Moving Average (SMA)',
-                                data: sma_data.slice(-500),
+                                data: sma_data.slice(-253),
+                                backgroundColor: [
+                                    'blue',
+                                ],
+                                borderColor: [
+                                    'blue',
+                                ],
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Moving Average Convergence/Divergence (MACD)',
+                                data: macd_data.slice(-253),
                                 backgroundColor: [
                                     'blue',
                                 ],
@@ -124,7 +151,7 @@
         });
     });
 
-    $('#submit-btn').click(function() {
+    $('#1-week').click(function() {
         // when the user specifies a new ticker, we call the Django backend (the 'get_stock_data' function) to get the stock data and refresh the graph. 
         // obtain the ticker string from the input textbox
         var tickerText = $('#ticker-input').val();
@@ -137,7 +164,7 @@
               success: function (res, status) {
                 // stock price and SMA data for the user-specified ticker is now in the "res" object
                 var tickerDisplay = res['prices']['Meta Data']['2. Symbol'];
-                var graphTitle = tickerDisplay + ' (data for the trailing 500 trading days)'
+                var graphTitle = tickerDisplay + ' (data for past week)'
 
                 var priceSeries = res['prices']['Time Series (Daily)'];
                 var daily_adjusted_close = [];
@@ -163,11 +190,22 @@
                 };
                 sma_data_parse();
 
+                var macdSeries = res['macd']['Technical Analysis: MACD'];
+                var macd_data = [];
+
+                macd_data_parse = function(){
+                    for (let key in macdSeries){
+                        macd_data.push(Number(macdSeries[key]['MACD']));
+                    }
+                };
+                macd_data_parse();
+
 
                 // only keep the latest 500 data points (i.e., data for the latest 500 trading days) for the three lists below
-                daily_adjusted_close.reverse().slice(500);
-                sma_data.reverse().slice(500);
-                dates.reverse().slice(500);
+                daily_adjusted_close.reverse().slice();
+                sma_data.reverse().slice();
+                macd_data.reverse();
+                dates.reverse().slice();
 
                 //instruct Chart.js to plot the graph, with "dates" as the x-axis labels and "daily_adjusted_close" and "sma_data" as the y-axis values
                 $('#myChart').remove(); // this is my <canvas> element
@@ -176,11 +214,11 @@
                 var myChart = new Chart(ctx, {
                 type: 'line',
                     data: {
-                        labels: dates.slice(-500),
+                        labels: dates.slice(-7),
                         datasets: [
                             {
                                 label: 'Daily Adjusted Close',
-                                data: daily_adjusted_close.slice(-500),
+                                data: daily_adjusted_close.slice(-7),
                                 backgroundColor: [
                                     'green',
                                 ],
@@ -191,12 +229,23 @@
                             },
                             {
                                 label: 'Simple Moving Average (SMA)',
-                                data: sma_data.slice(-500),
+                                data: sma_data.slice(-7),
                                 backgroundColor: [
                                     'blue',
                                 ],
                                 borderColor: [
                                     'blue',
+                                ],
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Moving average convergence/ divergence (MACD)',
+                                data: macd_data.slice(-7),
+                                backgroundColor: [
+                                    'red',
+                                ],
+                                borderColor: [
+                                    'red',
                                 ],
                                 borderWidth: 1
                             },
@@ -223,9 +272,372 @@
 
               }
         });
-
-
     });
+    $('#1-month').click(function() {
+        // when the user specifies a new ticker, we call the Django backend (the 'get_stock_data' function) to get the stock data and refresh the graph. 
+        // obtain the ticker string from the input textbox
+        var tickerText = $('#ticker-input').val();
+        $.ajax({
+              type: "POST",
+              url: "/get_stock_data/",
+              data: {
+                 'ticker': tickerText,
+              },
+              success: function (res, status) {
+                // stock price and SMA data for the user-specified ticker is now in the "res" object
+                var tickerDisplay = res['prices']['Meta Data']['2. Symbol'];
+                var graphTitle = tickerDisplay + ' (data for the past month)'
+
+                var priceSeries = res['prices']['Time Series (Daily)'];
+                var daily_adjusted_close = [];
+                var dates = [];
+
+                price_data_parse = function(){
+                    for (let key in priceSeries) {
+                        daily_adjusted_close.push(Number(priceSeries[key]['5. adjusted close']));
+                        dates.push(String(key));
+                    }
+
+                };
+                price_data_parse();
+
+                var smaSeries = res['sma']['Technical Analysis: SMA'];
+                var sma_data = [];
+
+                sma_data_parse = function(){
+                    for (let key in smaSeries) {
+                        sma_data.push(Number(smaSeries[key]['SMA']));
+                    }
+
+                };
+                sma_data_parse();
+
+                var macdSeries = res['macd']['Technical Analysis: MACD'];
+                var macd_data = [];
+
+                macd_data_parse = function(){
+                    for (let key in macdSeries){
+                        macd_data.push(Number(macdSeries[key]['MACD']));
+                    }
+                };
+                macd_data_parse();
+
+
+                // only keep the latest 500 data points (i.e., data for the latest 500 trading days) for the three lists below
+                daily_adjusted_close.reverse().slice();
+                sma_data.reverse().slice();
+                macd_data.reverse();
+                dates.reverse().slice();
+
+                //instruct Chart.js to plot the graph, with "dates" as the x-axis labels and "daily_adjusted_close" and "sma_data" as the y-axis values
+                $('#myChart').remove(); // this is my <canvas> element
+                $('#graph-area').append('<canvas id="myChart"><canvas>');
+                var ctx = document.getElementById('myChart').getContext('2d');
+                var myChart = new Chart(ctx, {
+                type: 'line',
+                    data: {
+                        labels: dates.slice(-22),
+                        datasets: [
+                            {
+                                label: 'Daily Adjusted Close',
+                                data: daily_adjusted_close.slice(-22),
+                                backgroundColor: [
+                                    'green',
+                                ],
+                                borderColor: [
+                                    'green',
+                                ],
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Simple Moving Average (SMA)',
+                                data: sma_data.slice(-22),
+                                backgroundColor: [
+                                    'blue',
+                                ],
+                                borderColor: [
+                                    'blue',
+                                ],
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Moving average convergence/ divergence (MACD)',
+                                data: macd_data.slice(-22),
+                                backgroundColor: [
+                                    'red',
+                                ],
+                                borderColor: [
+                                    'red',
+                                ],
+                                borderWidth: 1
+                            },
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                //beginAtZero: false
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                            position: 'top',
+                            },
+                            title: {
+                            display: true,
+                            text: graphTitle
+                            }
+                        }
+                    }
+                });
+
+              }
+        });
+    });
+        $('#1-year').click(function() {
+        // when the user specifies a new ticker, we call the Django backend (the 'get_stock_data' function) to get the stock data and refresh the graph. 
+        // obtain the ticker string from the input textbox
+        var tickerText = $('#ticker-input').val();
+        $.ajax({
+              type: "POST",
+              url: "/get_stock_data/",
+              data: {
+                 'ticker': tickerText,
+              },
+              success: function (res, status) {
+                // stock price and SMA data for the user-specified ticker is now in the "res" object
+                var tickerDisplay = res['prices']['Meta Data']['2. Symbol'];
+                var graphTitle = tickerDisplay + ' (data for past year)'
+
+                var priceSeries = res['prices']['Time Series (Daily)'];
+                var daily_adjusted_close = [];
+                var dates = [];
+
+                price_data_parse = function(){
+                    for (let key in priceSeries) {
+                        daily_adjusted_close.push(Number(priceSeries[key]['5. adjusted close']));
+                        dates.push(String(key));
+                    }
+
+                };
+                price_data_parse();
+
+                var smaSeries = res['sma']['Technical Analysis: SMA'];
+                var sma_data = [];
+
+                sma_data_parse = function(){
+                    for (let key in smaSeries) {
+                        sma_data.push(Number(smaSeries[key]['SMA']));
+                    }
+
+                };
+                sma_data_parse();
+
+                var macdSeries = res['macd']['Technical Analysis: MACD'];
+                var macd_data = [];
+
+                macd_data_parse = function(){
+                    for (let key in macdSeries){
+                        macd_data.push(Number(macdSeries[key]['MACD']));
+                    }
+                };
+                macd_data_parse();
+
+
+                // only keep the latest 500 data points (i.e., data for the latest 500 trading days) for the three lists below
+                daily_adjusted_close.reverse().slice();
+                sma_data.reverse().slice();
+                macd_data.reverse();
+                dates.reverse().slice();
+
+                //instruct Chart.js to plot the graph, with "dates" as the x-axis labels and "daily_adjusted_close" and "sma_data" as the y-axis values
+                $('#myChart').remove(); // this is my <canvas> element
+                $('#graph-area').append('<canvas id="myChart"><canvas>');
+                var ctx = document.getElementById('myChart').getContext('2d');
+                var myChart = new Chart(ctx, {
+                type: 'line',
+                    data: {
+                        labels: dates.slice(-253),
+                        datasets: [
+                            {
+                                label: 'Daily Adjusted Close',
+                                data: daily_adjusted_close.slice(-253),
+                                backgroundColor: [
+                                    'green',
+                                ],
+                                borderColor: [
+                                    'green',
+                                ],
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Simple Moving Average (SMA)',
+                                data: sma_data.slice(-253),
+                                backgroundColor: [
+                                    'blue',
+                                ],
+                                borderColor: [
+                                    'blue',
+                                ],
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Moving average convergence/ divergence (MACD)',
+                                data: macd_data.slice(-253),
+                                backgroundColor: [
+                                    'red',
+                                ],
+                                borderColor: [
+                                    'red',
+                                ],
+                                borderWidth: 1
+                            },
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                //beginAtZero: false
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                            position: 'top',
+                            },
+                            title: {
+                            display: true,
+                            text: graphTitle
+                            }
+                        }
+                    }
+                });
+
+              }
+        });
+        });
+        $('#5-years').click(function() {
+        var tickerText = $('#ticker-input').val();
+        $.ajax({
+              type: "POST",
+              url: "/get_stock_data/",
+              data: {
+                 'ticker': tickerText,
+              },
+              success: function (res, status) {
+                // stock price and SMA data for the user-specified ticker is now in the "res" object
+                var tickerDisplay = res['prices']['Meta Data']['2. Symbol'];
+                var graphTitle = tickerDisplay + ' (data for past 5 years)'
+
+                var priceSeries = res['prices']['Time Series (Daily)'];
+                var daily_adjusted_close = [];
+                var dates = [];
+
+                price_data_parse = function(){
+                    for (let key in priceSeries) {
+                        daily_adjusted_close.push(Number(priceSeries[key]['5. adjusted close']));
+                        dates.push(String(key));
+                    }
+
+                };
+                price_data_parse();
+
+                var smaSeries = res['sma']['Technical Analysis: SMA'];
+                var sma_data = [];
+
+                sma_data_parse = function(){
+                    for (let key in smaSeries) {
+                        sma_data.push(Number(smaSeries[key]['SMA']));
+                    }
+
+                };
+                sma_data_parse();
+
+                var macdSeries = res['macd']['Technical Analysis: MACD'];
+                var macd_data = [];
+
+                macd_data_parse = function(){
+                    for (let key in macdSeries){
+                        macd_data.push(Number(macdSeries[key]['MACD']));
+                    }
+                };
+                macd_data_parse();
+
+
+                // only keep the latest 500 data points (i.e., data for the latest 500 trading days) for the three lists below
+                daily_adjusted_close.reverse().slice();
+                sma_data.reverse().slice();
+                macd_data.reverse();
+                dates.reverse().slice();
+
+                //instruct Chart.js to plot the graph, with "dates" as the x-axis labels and "daily_adjusted_close" and "sma_data" as the y-axis values
+                $('#myChart').remove(); // this is my <canvas> element
+                $('#graph-area').append('<canvas id="myChart"><canvas>');
+                var ctx = document.getElementById('myChart').getContext('2d');
+                var myChart = new Chart(ctx, {
+                type: 'line',
+                    data: {
+                        labels: dates.slice(-1260),
+                        datasets: [
+                            {
+                                label: 'Daily Adjusted Close',
+                                data: daily_adjusted_close.slice(-1260),
+                                backgroundColor: [
+                                    'green',
+                                ],
+                                borderColor: [
+                                    'green',
+                                ],
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Simple Moving Average (SMA)',
+                                data: sma_data.slice(-1260),
+                                backgroundColor: [
+                                    'blue',
+                                ],
+                                borderColor: [
+                                    'blue',
+                                ],
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Moving average convergence/ divergence (MACD)',
+                                data: macd_data.slice(-1260),
+                                backgroundColor: [
+                                    'red',
+                                ],
+                                borderColor: [
+                                    'red',
+                                ],
+                                borderWidth: 1
+                            },
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                //beginAtZero: false
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                            position: 'top',
+                            },
+                            title: {
+                            display: true,
+                            text: graphTitle
+                            }
+                        }
+                    }
+                });
+
+              }
+        });
+        });
+        
 
 </script>
 
